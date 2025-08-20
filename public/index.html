@@ -1,0 +1,830 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Mafia Roles</title>
+	<style>
+		* { box-sizing: border-box; }
+		body { 
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; 
+			margin: 0; 
+			background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+			color: #e2e8f0; 
+			min-height: 100vh;
+			overflow-x: hidden;
+		}
+		
+		/* Animated background */
+		body::before {
+			content: '';
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: 
+				radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+				radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+				radial-gradient(circle at 40% 80%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
+			z-index: -1;
+			animation: float 20s ease-in-out infinite;
+		}
+		
+		@keyframes float {
+			0%, 100% { transform: translate(0, 0) rotate(0deg); }
+			33% { transform: translate(30px, -30px) rotate(120deg); }
+			66% { transform: translate(-20px, 20px) rotate(240deg); }
+		}
+		
+		header { 
+			padding: 20px 24px; 
+			background: rgba(15, 23, 42, 0.8);
+			backdrop-filter: blur(20px);
+			border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+			display: flex; 
+			justify-content: space-between; 
+			align-items: center;
+			position: sticky;
+			top: 0;
+			z-index: 10;
+		}
+		
+		.logo {
+			font-size: 24px;
+			font-weight: 800;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+		}
+		
+		.container { 
+			display: grid; 
+			grid-template-columns: 1fr 1fr; 
+			gap: 24px; 
+			padding: 24px; 
+			max-width: 1200px;
+			margin: 0 auto;
+		}
+		
+		.card { 
+			background: rgba(30, 41, 59, 0.6);
+			backdrop-filter: blur(20px);
+			padding: 24px; 
+			border-radius: 20px; 
+			border: 1px solid rgba(148, 163, 184, 0.2);
+			box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+			transition: all 0.3s ease;
+		}
+		
+		.card:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+			border-color: rgba(148, 163, 184, 0.3);
+		}
+		
+		h3 {
+			margin: 0 0 20px 0;
+			font-size: 20px;
+			font-weight: 700;
+			color: #f1f5f9;
+		}
+		
+		button { 
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: white; 
+			border: none; 
+			padding: 14px 20px; 
+			border-radius: 12px; 
+			cursor: pointer; 
+			font-weight: 600;
+			font-size: 14px;
+			transition: all 0.2s ease;
+			position: relative;
+			overflow: hidden;
+		}
+		
+		button::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: -100%;
+			width: 100%;
+			height: 100%;
+			background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+			transition: left 0.5s;
+		}
+		
+		button:hover::before {
+			left: 100%;
+		}
+		
+		button:hover {
+			transform: translateY(-1px);
+			box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+		}
+		
+		button:active {
+			transform: translateY(0);
+		}
+		
+		button.secondary {
+			background: rgba(71, 85, 105, 0.8);
+			backdrop-filter: blur(10px);
+		}
+		
+		button.secondary:hover {
+			background: rgba(71, 85, 105, 1);
+			box-shadow: 0 6px 20px rgba(71, 85, 105, 0.4);
+		}
+
+		/* Distinct style for Set referee buttons */
+		.set-ref-btn {
+			background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+			padding: 8px 12px;
+			border-radius: 999px;
+			font-size: 12px;
+			width: auto;
+		}
+
+		.set-ref-btn:hover {
+			box-shadow: 0 6px 18px rgba(34, 197, 94, 0.4);
+		}
+		
+		button:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+			transform: none;
+		}
+		
+		button:disabled:hover {
+			transform: none;
+			box-shadow: none;
+		}
+		
+		input, select { 
+			background: rgba(15, 23, 42, 0.8);
+			backdrop-filter: blur(10px);
+			color: #e2e8f0; 
+			border: 1px solid rgba(148, 163, 184, 0.2); 
+			padding: 14px 16px; 
+			border-radius: 12px; 
+			width: 100%;
+			font-size: 14px;
+			transition: all 0.2s ease;
+		}
+		
+		input:focus, select:focus {
+			outline: none;
+			border-color: #667eea;
+			box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+		}
+		
+		.list { 
+			max-height: 60vh; 
+			overflow-y: auto;
+			margin-top: 16px;
+		}
+		
+		.list::-webkit-scrollbar {
+			width: 6px;
+		}
+		
+		.list::-webkit-scrollbar-track {
+			background: rgba(15, 23, 42, 0.3);
+			border-radius: 3px;
+		}
+		
+		.list::-webkit-scrollbar-thumb {
+			background: rgba(148, 163, 184, 0.3);
+			border-radius: 3px;
+		}
+		
+		.list::-webkit-scrollbar-thumb:hover {
+			background: rgba(148, 163, 184, 0.5);
+		}
+		
+		.row { 
+			display: flex; 
+			align-items: center; 
+			justify-content: space-between; 
+			padding: 16px 0; 
+			border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+			transition: all 0.2s ease;
+		}
+		
+		.row:hover {
+			background: rgba(148, 163, 184, 0.05);
+			border-radius: 8px;
+			padding-left: 8px;
+			padding-right: 8px;
+		}
+		
+		.row:last-child {
+			border-bottom: none;
+		}
+		
+		.badge { 
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: white;
+			border-radius: 999px; 
+			padding: 6px 12px; 
+			font-size: 12px;
+			font-weight: 600;
+			margin-right: 8px;
+		}
+		
+		.badge.started {
+			background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+		}
+		
+		.badge.offline {
+			background: rgba(148, 163, 184, 0.5);
+		}
+
+		/* Room header and status badges */
+		.room-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 8px;
+		}
+
+		.badge.waiting {
+			background: rgba(148, 163, 184, 0.2);
+			color: #cbd5e1;
+		}
+		
+		.grid-2 { 
+			display: grid; 
+			grid-template-columns: 1fr 1fr; 
+			gap: 12px; 
+		}
+		
+		/* Overlays */
+		.overlay { 
+			position: fixed; 
+			inset: 0; 
+			background: rgba(15, 23, 42, 0.95);
+			backdrop-filter: blur(20px);
+			display: none; 
+			align-items: center; 
+			justify-content: center; 
+			padding: 24px; 
+			z-index: 50;
+			animation: fadeIn 0.3s ease;
+		}
+		
+		@keyframes fadeIn {
+			from { opacity: 0; }
+			to { opacity: 1; }
+		}
+		
+		.overlay.active { 
+			display: flex; 
+		}
+		
+		.overlay .card { 
+			width: 100%; 
+			max-width: 420px;
+			transform: scale(0.95);
+			animation: slideUp 0.3s ease forwards;
+		}
+		
+		@keyframes slideUp {
+			to {
+				transform: scale(1);
+			}
+		}
+		
+		.title { 
+			font-size: 28px; 
+			font-weight: 800; 
+			margin: 0 0 8px 0;
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			background-clip: text;
+		}
+		
+		.sub { 
+			color: #94a3b8; 
+			margin: 0 0 24px 0;
+			font-size: 16px;
+		}
+		
+		.room-item {
+			background: rgba(15, 23, 42, 0.4);
+			padding: 16px;
+			border-radius: 12px;
+			border: 1px solid rgba(148, 163, 184, 0.1);
+			transition: all 0.2s ease;
+		}
+		
+		.room-item:hover {
+			background: rgba(15, 23, 42, 0.6);
+			border-color: #667eea;
+			transform: translateY(-1px);
+		}
+		
+		.room-name {
+			font-weight: 600;
+			font-size: 16px;
+			margin-bottom: 8px;
+		}
+		
+		.room-info {
+			display: flex;
+			gap: 8px;
+			margin-bottom: 12px;
+			flex-wrap: wrap;
+		}
+		
+		.player-item {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 12px 0;
+			border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+		}
+		
+		.player-name {
+			font-weight: 600;
+		}
+		
+		.player-badges {
+			display: flex;
+			gap: 6px;
+		}
+
+		/* Referee overview cards */
+		.overview-grid { 
+			display: grid; 
+			grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); 
+			gap: 8px; 
+		}
+		.role-card { 
+			border-radius: 12px; 
+			padding: 10px 12px; 
+			background: rgba(15, 23, 42, 0.6); 
+			border: 1px solid rgba(148, 163, 184, 0.2);
+		}
+		.role-card .rc-name { 
+			font-weight: 700; 
+			margin-bottom: 6px; 
+			font-size: 14px; 
+		}
+		.role-card .rc-role { 
+			font-size: 13px; 
+			opacity: 0.95; 
+		}
+		.role-card.role-mafia { 
+			background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(127, 29, 29, 0.18)); 
+			border-color: rgba(239, 68, 68, 0.35);
+		}
+		.role-card.role-doctor { 
+			background: linear-gradient(135deg, rgba(34, 197, 94, 0.18), rgba(21, 128, 61, 0.18)); 
+			border-color: rgba(34, 197, 94, 0.35);
+		}
+		.role-card.role-detective { 
+			background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(30, 64, 175, 0.18)); 
+			border-color: rgba(59, 130, 246, 0.35);
+		}
+		.role-card.role-citizen { 
+			background: linear-gradient(135deg, rgba(148, 163, 184, 0.14), rgba(71, 85, 105, 0.14)); 
+			border-color: rgba(148, 163, 184, 0.3);
+		}
+		
+		.role-display {
+			text-align: center;
+			padding: 40px 20px;
+		}
+		
+		.role-title {
+			font-size: 32px;
+			font-weight: 800;
+			margin-bottom: 20px;
+			padding: 24px;
+			border-radius: 16px;
+			background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+			border: 2px solid rgba(102, 126, 234, 0.3);
+			backdrop-filter: blur(10px);
+		}
+		
+		/* Mobile optimizations */
+		@media (max-width: 768px) {
+			.container { 
+				grid-template-columns: 1fr; 
+				padding: 16px; 
+				gap: 16px; 
+			}
+			
+			header { 
+				padding: 16px; 
+			}
+			
+			.card { 
+				padding: 20px; 
+				border-radius: 16px; 
+			}
+			
+			button { 
+				padding: 16px 20px; 
+				border-radius: 12px;
+				font-size: 16px;
+			}
+			
+			input, select { 
+				padding: 16px; 
+				border-radius: 12px;
+				font-size: 16px;
+			}
+			
+			.list { 
+				max-height: 50vh; 
+			}
+			
+			.title {
+				font-size: 24px;
+			}
+			
+			.logo {
+				font-size: 20px;
+			}
+			
+			.role-title {
+				font-size: 24px;
+				padding: 20px;
+			}
+		}
+		
+		/* Focus styles for accessibility */
+		button:focus-visible,
+		input:focus-visible,
+		select:focus-visible {
+			outline: 2px solid #667eea;
+			outline-offset: 2px;
+		}
+	</style>
+</head>
+<body>
+	<header>
+		<div class="logo">🎭 Mafia Roles</div>
+		<div style="display:flex; gap:12px; align-items:center;">
+			<button id="settingsBtn" title="Settings" style="width:auto; padding:10px 12px; background: rgba(71, 85, 105, 0.8);">⚙️</button>
+		</div>
+	</header>
+	<div id="nameOverlay" class="overlay">
+		<div class="card">
+			<div class="title">Mafia Roles</div>
+			<div class="sub">Enter your name to get started</div>
+			<input id="nameInput" placeholder="Your name" maxlength="20" />
+			<div style="height:8px"></div>
+			<button id="continueBtn">Continue</button>
+		</div>
+	</div>
+	<div id="settingsOverlay" class="overlay">
+		<div class="card">
+			<div class="title">Settings</div>
+			<div class="sub">Change your name</div>
+			<input id="settingsNameInput" placeholder="Your name" maxlength="20" />
+			<div style="height:8px"></div>
+			<div class="grid-2">
+				<button id="saveSettingsBtn">Save</button>
+				<button id="cancelSettingsBtn" class="secondary">Cancel</button>
+			</div>
+		</div>
+	</div>
+	<div class="container">
+		<div class="card" id="roomsCard">
+			<h3>Rooms</h3>
+			<div class="grid-2">
+				<input id="roomName" placeholder="Room name" />
+				<button id="createRoomBtn">Create Room</button>
+			</div>
+			<div class="list" id="roomsList"></div>
+		</div>
+		<div class="card" id="roomPanel" style="display:none">
+			<h3 id="roomTitle">Room</h3>
+			<div id="lobbyArea">
+				<div class="row">
+					<div></div>
+					<div class="grid-2">
+						<button id="leaveBtn">Leave</button>
+						<button id="deleteBtn" style="display:none">Delete Room</button>
+					</div>
+				</div>
+				<div>
+					<h4>Players</h4>
+					<div id="playersList" class="list"></div>
+				</div>
+				<div id="hostControls">
+					<div class="row">
+						<div>Mafias</div>
+						<div style="display:flex; align-items:center; gap:8px;">
+							<button id="mafiaMinus" class="secondary" style="width:auto;">-</button>
+							<span id="mafiaCountDisplay" class="badge">1</span>
+							<button id="mafiaPlus" style="width:auto;">+</button>
+						</div>
+					</div>
+					<div class="row">
+						<button id="startBtn">Start Game</button>
+						<button id="resetBtn">Reset</button>
+					</div>
+				</div>
+			</div>
+			<div id="roleArea" style="display:none">
+				<div class="role-display">
+					<div id="yourRole"></div>
+					<div class="row" id="roleHostControls" style="display:none; justify-content: center; margin-top: 20px;">
+						<button id="resetBtnInRole" class="secondary">Reset Game</button>
+					</div>
+				</div>
+				<div id="overview" style="display:none">
+					<h4>All Player Roles (Referee View)</h4>
+					<div id="overviewList" class="list"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+		const socket = io();
+		let sessionId = localStorage.getItem('sessionId');
+		let currentRoom = null;
+ 		let hasName = false;
+
+		function $(id){ return document.getElementById(id); }
+
+		// Current player name helper
+		function currentName() {
+			return (localStorage.getItem('playerName') || '').trim() || 'Player';
+		}
+
+		// Role emojis and formatter
+		const roleEmojiMap = { Doctor: '🩺', Detective: '🕵️', Mafia: '🔪', Citizen: '👤', Referee: '👁️' };
+		function formatRole(role) {
+			const emoji = roleEmojiMap[role] || '🎭';
+			return `${emoji} ${role}`;
+		}
+		function roleClass(role) {
+			if (role === 'Mafia') return 'role-mafia';
+			if (role === 'Doctor') return 'role-doctor';
+			if (role === 'Detective') return 'role-detective';
+			return 'role-citizen';
+		}
+
+		function renderRooms(rooms){
+			const list = $('roomsList');
+			list.innerHTML = '';
+			if (rooms.length === 0) {
+				list.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 40px 20px;">No rooms available<br><small>Create one to get started!</small></div>';
+				return;
+			}
+			rooms.forEach(r => {
+				const roomDiv = document.createElement('div');
+				roomDiv.className = 'room-item';
+				roomDiv.innerHTML = `
+					<div class="room-header">
+						<div class="room-name">${r.name}</div>
+						<span class="badge ${r.started ? 'started' : 'waiting'}">${r.started ? 'In Game' : 'Waiting'}</span>
+					</div>
+					<button style="width: 100%;">Join Room</button>
+				`;
+				roomDiv.querySelector('button').onclick = () => {
+					const name = currentName();
+					socket.emit('joinRoom', { sessionId, name, roomId: r.id });
+				};
+				list.appendChild(roomDiv);
+			});
+		}
+
+		function renderRoomState(state){
+			$('roomTitle').innerText = state.name;
+			$('deleteBtn').style.display = (state.hostId === sessionId) ? '' : 'none';
+			const isHost = state.hostId === sessionId;
+			// Show/hide host controls wrapper
+			document.getElementById('hostControls').style.display = isHost ? '' : 'none';
+			// Build players list with per-player Set buttons
+			const me = state.players.find(p => p.sessionId === sessionId);
+			$('playersList').innerHTML = state.players.map(p => {
+				const canSet = isHost && !p.isReferee;
+				return `
+					<div class="player-item" data-sid="${p.sessionId}">
+						<div class="player-name" style="${isHost ? 'cursor:pointer;' : ''}">${p.name}</div>
+						<div class="player-badges">
+							${p.isHost ? '<span class="badge">Host</span>' : ''}
+							${p.isReferee ? '<span class="badge">Referee</span>' : ''}
+							${!p.connected ? '<span class="badge offline">Offline</span>' : ''}
+							${canSet ? '<button class="set-ref-btn">Set</button>' : ''}
+						</div>
+					</div>
+				`;
+			}).join('');
+			// Wire click handlers for setting referee
+			if (isHost) {
+				Array.from(document.querySelectorAll('.set-ref-btn')).forEach(btn => {
+					btn.onclick = (e) => {
+						const sid = e.currentTarget.closest('.player-item').getAttribute('data-sid');
+						socket.emit('setReferee', { sessionId, roomId: currentRoom, refereeId: sid });
+					};
+				});
+				Array.from(document.querySelectorAll('.player-item .player-name')).forEach(nameEl => {
+					nameEl.onclick = (e) => {
+						const sid = e.currentTarget.closest('.player-item').getAttribute('data-sid');
+						const isAlreadyRef = state.refereeId === sid;
+						if (!isAlreadyRef) {
+							socket.emit('setReferee', { sessionId, roomId: currentRoom, refereeId: sid });
+						}
+					};
+				});
+			}
+			// Update mafia count display and controls
+			$('mafiaCountDisplay').textContent = state.settings.mafiaCount;
+			$('mafiaMinus').disabled = !isHost;
+			$('mafiaPlus').disabled = !isHost;
+			// Host-only start/reset
+			$('startBtn').disabled = !isHost;
+			$('resetBtn').disabled = !isHost;
+		}
+
+		function showRoomPanel(show){
+			$('roomPanel').style.display = show ? '' : 'none';
+		}
+
+		// initial hello
+		socket.emit('hello', { sessionId, name: currentName() });
+		socket.on('helloAck', (data) => {
+			if (!sessionId) {
+				sessionId = data.sessionId;
+				localStorage.setItem('sessionId', sessionId);
+			}
+		});
+
+		// rooms list
+		async function loadRooms(){
+			const res = await fetch('/api/rooms');
+			const rooms = await res.json();
+			renderRooms(rooms);
+			// Attempt auto-rejoin once
+			if (!window.__triedAutoJoin) {
+				window.__triedAutoJoin = true;
+				const lastRoomId = localStorage.getItem('lastRoomId');
+				if (lastRoomId && rooms.some(r => r.id === lastRoomId)) {
+					const name = currentName();
+					socket.emit('joinRoom', { sessionId, name, roomId: lastRoomId });
+				}
+			}
+		}
+
+		loadRooms();
+		setInterval(loadRooms, 2000);
+		socket.on('roomsUpdated', loadRooms);
+
+		$('createRoomBtn').onclick = () => {
+			const name = currentName();
+			const roomName = $('roomName').value.trim() || 'Room';
+			socket.emit('createRoom', { sessionId, name, roomName });
+		};
+
+		socket.on('joinedRoom', ({ roomId }) => {
+			currentRoom = roomId;
+			localStorage.setItem('lastRoomId', roomId);
+			showRoomPanel(true);
+			// Hide rooms list screen when inside a room
+			document.getElementById('roomsCard').style.display = 'none';
+		});
+
+		let currentRoomState = null;
+		socket.on('roomState', (state) => {
+			currentRoomState = state;
+			renderRoomState(state);
+			// If game is not started, ensure everyone is back to lobby
+			if (!state.started) {
+				$('roleArea').style.display = 'none';
+				$('lobbyArea').style.display = '';
+				$('yourRole').textContent = '';
+				$('overview').style.display = 'none';
+				$('overviewList').innerHTML = '';
+			}
+			// Show host controls in role view if this client is the host
+			$('roleHostControls').style.display = (state.hostId === sessionId) ? '' : 'none';
+		});
+
+		socket.on('roomDeleted', () => {
+			currentRoom = null;
+			localStorage.removeItem('lastRoomId');
+			showRoomPanel(false);
+			document.getElementById('roomsCard').style.display = '';
+		});
+
+		$('leaveBtn').onclick = () => {
+			if (!currentRoom) return;
+			socket.emit('leaveRoom', { sessionId, roomId: currentRoom });
+			currentRoom = null;
+			localStorage.removeItem('lastRoomId');
+			showRoomPanel(false);
+			document.getElementById('roomsCard').style.display = '';
+		};
+		$('deleteBtn').onclick = () => {
+			if (!currentRoom) return;
+			socket.emit('deleteRoom', { sessionId, roomId: currentRoom });
+			localStorage.removeItem('lastRoomId');
+		};
+		$('mafiaMinus').onclick = () => {
+			if (!currentRoom) return;
+			const current = (currentRoomState && currentRoomState.settings && typeof currentRoomState.settings.mafiaCount === 'number') ? currentRoomState.settings.mafiaCount : 1;
+			const mafiaCount = Math.max(0, current - 1);
+			socket.emit('setMafiaCount', { sessionId, roomId: currentRoom, mafiaCount });
+		};
+		$('mafiaPlus').onclick = () => {
+			if (!currentRoom) return;
+			const current = (currentRoomState && currentRoomState.settings && typeof currentRoomState.settings.mafiaCount === 'number') ? currentRoomState.settings.mafiaCount : 1;
+			const mafiaCount = Math.min(10, current + 1);
+			socket.emit('setMafiaCount', { sessionId, roomId: currentRoom, mafiaCount });
+		};
+		$('startBtn').onclick = () => {
+			if (!currentRoom) return;
+			socket.emit('startGame', { sessionId, roomId: currentRoom });
+		};
+		$('resetBtn').onclick = () => {
+			if (!currentRoom) return;
+			socket.emit('resetGame', { sessionId, roomId: currentRoom });
+			$('yourRole').textContent = '';
+			$('roleArea').style.display = 'none';
+			$('lobbyArea').style.display = '';
+			$('overview').style.display = 'none';
+			$('overviewList').innerHTML = '';
+		};
+		$('resetBtnInRole').onclick = () => {
+			if (!currentRoom) return;
+			socket.emit('resetGame', { sessionId, roomId: currentRoom });
+			$('yourRole').textContent = '';
+			$('roleArea').style.display = 'none';
+			$('lobbyArea').style.display = '';
+			$('overview').style.display = 'none';
+			$('overviewList').innerHTML = '';
+		};
+
+		socket.on('yourRole', ({ role }) => {
+			$('yourRole').innerHTML = `<div class="role-title">${formatRole(role)}</div>`;
+			$('roleArea').style.display = '';
+			$('lobbyArea').style.display = 'none';
+		});
+
+		socket.on('rolesOverview', ({ players }) => {
+			$('overview').style.display = '';
+			$('roleArea').style.display = '';
+			$('lobbyArea').style.display = 'none';
+			const roleOrder = { Mafia: 0, Doctor: 1, Detective: 2, Citizen: 3 };
+			const sorted = players.slice().sort((a, b) => (roleOrder[a.role] ?? 99) - (roleOrder[b.role] ?? 99));
+			$('overviewList').innerHTML = `<div class="overview-grid">${sorted.map(p => `
+				<div class="role-card ${roleClass(p.role)}">
+					<div class="rc-name">${p.name}</div>
+					<div class="rc-role">${formatRole(p.role)}</div>
+				</div>
+			`).join('')}</div>`;
+		});
+
+		socket.on('errorMsg', (msg) => {
+			alert(msg);
+		});
+
+		// Name overlay logic
+		const savedName = localStorage.getItem('playerName');
+		if (savedName) {
+			$('nameOverlay').classList.remove('active');
+		} else {
+			$('nameOverlay').classList.add('active');
+		}
+		$('continueBtn').onclick = () => {
+			const name = $('nameInput').value.trim();
+			if (!name) { alert('Please enter your name'); return; }
+			localStorage.setItem('playerName', name);
+			$('nameOverlay').classList.remove('active');
+		};
+		$('nameInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') $('continueBtn').click(); });
+
+		// Settings modal logic
+		$('settingsBtn').onclick = () => {
+			$('settingsNameInput').value = localStorage.getItem('playerName') || '';
+			$('settingsOverlay').classList.add('active');
+		};
+		$('cancelSettingsBtn').onclick = () => {
+			$('settingsOverlay').classList.remove('active');
+		};
+		$('saveSettingsBtn').onclick = () => {
+			const newName = $('settingsNameInput').value.trim();
+			if (!newName) { alert('Please enter a name'); return; }
+			localStorage.setItem('playerName', newName);
+			$('settingsOverlay').classList.remove('active');
+			if (currentRoom) {
+				socket.emit('changeName', { sessionId, newName, roomId: currentRoom });
+			}
+		};
+	</script>
+</body>
+</html>
+
+
