@@ -56,7 +56,7 @@ function deleteRoomIfEmpty(roomId) {
 				rooms.delete(roomId);
 				roomDeletionTimers.delete(roomId);
 				io.emit('roomsUpdated');
-			}, 30000); // 30s grace period
+			}, 7200000); // 2h grace period
 			roomDeletionTimers.set(roomId, timeoutId);
 		}
 	} else {
