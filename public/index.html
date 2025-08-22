@@ -470,15 +470,15 @@
 </head>
 <body>
 	<header>
-		<div class="logo">🎭 Mafia Roles</div>
+		<div class="logo" id="logoText">🎭 Mafia Roles</div>
 		<div style="display:flex; gap:12px; align-items:center;">
 			<button id="settingsBtn" title="Settings" style="width:auto; padding:10px 12px; background: rgba(71, 85, 105, 0.8);">⚙️</button>
 		</div>
 	</header>
 	<div id="nameOverlay" class="overlay">
 		<div class="card">
-			<div class="title">Mafia Roles</div>
-			<div class="sub">Enter your name to get started</div>
+			<div class="title" id="overlayTitle">Mafia Roles</div>
+			<div class="sub" id="overlaySubtitle">Enter your name to get started</div>
 			<input id="nameInput" placeholder="Your name" maxlength="20" />
 			<div style="height:8px"></div>
 			<button id="continueBtn">Continue</button>
@@ -486,10 +486,15 @@
 	</div>
 	<div id="settingsOverlay" class="overlay">
 		<div class="card">
-			<div class="title">Settings</div>
-			<div class="sub">Change your name</div>
+			<div class="title" id="settingsTitle">Settings</div>
+			<div class="sub" id="settingsSub">Change your name</div>
 			<input id="settingsNameInput" placeholder="Your name" maxlength="20" />
 			<div style="height:8px"></div>
+			<label for="langSelect" id="langLabel" style="display:block; margin:8px 0 6px 0; color:#cbd5e1; font-weight:600;">Language</label>
+			<select id="langSelect" style="margin-bottom:12px;">
+				<option value="ar">العربية</option>
+				<option value="en">English</option>
+			</select>
 			<div class="grid-2">
 				<button id="saveSettingsBtn">Save</button>
 				<button id="cancelSettingsBtn" class="secondary">Cancel</button>
@@ -498,7 +503,7 @@
 	</div>
 	<div class="container">
 		<div class="card" id="roomsCard">
-			<h3>Rooms</h3>
+			<h3 id="roomsHeading">Rooms</h3>
 			<div class="grid-2">
 				<input id="roomName" placeholder="Room name" />
 				<button id="createRoomBtn">Create Room</button>
@@ -516,12 +521,12 @@
 					</div>
 				</div>
 				<div>
-					<h4>Players</h4>
+					<h4 id="playersHeading">Players</h4>
 					<div id="playersList" class="list"></div>
 				</div>
 				<div id="hostControls">
 					<div class="row">
-						<div>Mafias</div>
+						<div id="mafiasLabel">Mafias</div>
 						<div style="display:flex; align-items:center; gap:8px;">
 							<button id="mafiaMinus" class="secondary" style="width:auto;">-</button>
 							<span id="mafiaCountDisplay" class="badge">1</span>
@@ -542,7 +547,7 @@
 					</div>
 				</div>
 				<div id="overview" style="display:none">
-					<h4>All Player Roles (Referee View)</h4>
+					<h4 id="overviewHeading">All Player Roles (Referee View)</h4>
 					<div id="overviewList" class="list"></div>
 				</div>
 			</div>
@@ -562,11 +567,131 @@
 			return (localStorage.getItem('playerName') || '').trim() || 'Player';
 		}
 
+		// i18n
+		const i18n = {
+			ar: {
+				app_title: 'أدوار المافيا',
+				settings: 'الإعدادات',
+				name_overlay_title: 'أدوار المافيا',
+				name_overlay_sub: 'اكتب اسمك للمتابعة',
+				continue: 'متابعة',
+				rooms: 'الغرف',
+				room_name_ph: 'اسم الغرفة',
+				create_room: 'إنشاء غرفة',
+				no_rooms: 'لا توجد غرف متاحة\n\nأنشئ غرفة للبدء!',
+				room: 'الغرفة',
+				players: 'اللاعبون',
+				leave: 'مغادرة',
+				delete_room: 'حذف الغرفة',
+				mafias: 'عدد المافيا',
+				start_game: 'بدء اللعبة',
+				reset: 'إعادة تعيين',
+				reset_game: 'إعادة تعيين اللعبة',
+				in_game: 'قيد اللعب',
+				waiting: 'بانتظار اللاعبين',
+				host: 'المضيف',
+				referee: 'الحكم',
+				offline: 'غير متصل',
+				ref_overview: 'أدوار اللاعبين (عرض الحكم)',
+				set: 'تعيين',
+				settings_title: 'الإعدادات',
+				change_name: 'تغيير الاسم',
+				language: 'اللغة',
+				lang_ar: 'العربية',
+				lang_en: 'الإنجليزية',
+				save: 'حفظ',
+				cancel: 'إلغاء',
+				ph_your_name: 'اسمك',
+				role_Mafia: 'مافيا',
+				role_Doctor: 'الطبيب',
+				role_Detective: 'المحقق',
+				role_Citizen: 'مواطن',
+				role_Referee: 'الحكم'
+			},
+			en: {
+				app_title: 'Mafia Roles',
+				settings: 'Settings',
+				name_overlay_title: 'Mafia Roles',
+				name_overlay_sub: 'Enter your name to get started',
+				continue: 'Continue',
+				rooms: 'Rooms',
+				room_name_ph: 'Room name',
+				create_room: 'Create Room',
+				no_rooms: 'No rooms available\n\nCreate one to get started!',
+				room: 'Room',
+				players: 'Players',
+				leave: 'Leave',
+				delete_room: 'Delete Room',
+				mafias: 'Mafias',
+				start_game: 'Start Game',
+				reset: 'Reset',
+				reset_game: 'Reset Game',
+				in_game: 'In Game',
+				waiting: 'Waiting',
+				host: 'Host',
+				referee: 'Referee',
+				offline: 'Offline',
+				ref_overview: 'All Player Roles (Referee View)',
+				set: 'Set',
+				settings_title: 'Settings',
+				change_name: 'Change your name',
+				language: 'Language',
+				lang_ar: 'Arabic',
+				lang_en: 'English',
+				save: 'Save',
+				cancel: 'Cancel',
+				ph_your_name: 'Your name',
+				role_Mafia: 'Mafia',
+				role_Doctor: 'Doctor',
+				role_Detective: 'Detective',
+				role_Citizen: 'Citizen',
+				role_Referee: 'Referee'
+			}
+		};
+		function getLang() { return localStorage.getItem('lang') || 'ar'; }
+		function setLang(lang) { localStorage.setItem('lang', lang); }
+		function t(key) {
+			const lang = getLang();
+			return (i18n[lang] && i18n[lang][key]) || key;
+		}
+		function applyLanguage() {
+			const lang = getLang();
+			document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+			document.title = t('app_title');
+			$('logoText').textContent = t('app_title');
+			$('settingsBtn').title = t('settings');
+			$('overlayTitle').textContent = t('name_overlay_title');
+			$('overlaySubtitle').textContent = t('name_overlay_sub');
+			$('nameInput').placeholder = t('ph_your_name');
+			$('continueBtn').textContent = t('continue');
+			$('settingsTitle').textContent = t('settings_title');
+			$('settingsSub').textContent = t('change_name');
+			$('settingsNameInput').placeholder = t('ph_your_name');
+			$('langLabel').textContent = t('language');
+			$('saveSettingsBtn').textContent = t('save');
+			$('cancelSettingsBtn').textContent = t('cancel');
+			$('roomsHeading').textContent = t('rooms');
+			$('roomName').placeholder = t('room_name_ph');
+			$('createRoomBtn').textContent = t('create_room');
+			$('roomTitle').textContent = t('room');
+			$('playersHeading').textContent = t('players');
+			$('leaveBtn').textContent = t('leave');
+			$('deleteBtn').textContent = t('delete_room');
+			$('mafiasLabel').textContent = t('mafias');
+			$('startBtn').textContent = t('start_game');
+			$('resetBtn').textContent = t('reset');
+			$('resetBtnInRole').textContent = t('reset_game');
+			$('overviewHeading').textContent = t('ref_overview');
+			// Sync lang select
+			$('langSelect').value = lang;
+		}
+
 		// Role emojis and formatter
 		const roleEmojiMap = { Doctor: '🩺', Detective: '🕵️', Mafia: '🔪', Citizen: '👤', Referee: '👁️' };
 		function formatRole(role) {
 			const emoji = roleEmojiMap[role] || '🎭';
-			return `${emoji} ${role}`;
+			const key = 'role_' + role;
+			return `${emoji} ${t(key)}`;
 		}
 		function roleClass(role) {
 			if (role === 'Mafia') return 'role-mafia';
@@ -579,7 +704,7 @@
 			const list = $('roomsList');
 			list.innerHTML = '';
 			if (rooms.length === 0) {
-				list.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 40px 20px;">No rooms available<br><small>Create one to get started!</small></div>';
+				list.innerHTML = `<div style="text-align: center; color: #94a3b8; padding: 40px 20px; white-space: pre-line;">${t('no_rooms')}</div>`;
 				return;
 			}
 			rooms.forEach(r => {
@@ -588,10 +713,13 @@
 				roomDiv.innerHTML = `
 					<div class="room-header">
 						<div class="room-name">${r.name}</div>
-						<span class="badge ${r.started ? 'started' : 'waiting'}">${r.started ? 'In Game' : 'Waiting'}</span>
+						<span class="badge ${r.started ? 'started' : 'waiting'}">${r.started ? t('in_game') : t('waiting')}</span>
 					</div>
-					<button style="width: 100%;">Join Room</button>
+					<button style="width: 100%;">${t('join')}</button>
 				`;
+				// ensure join label exists in i18n via t('join'), fallback to create localized join text
+				if (!i18n.en.join) { i18n.en.join = 'Join Room'; i18n.ar.join = 'انضمام'; }
+				roomDiv.querySelector('button').textContent = t('join');
 				roomDiv.querySelector('button').onclick = () => {
 					const name = currentName();
 					socket.emit('joinRoom', { sessionId, name, roomId: r.id });
@@ -601,7 +729,7 @@
 		}
 
 		function renderRoomState(state){
-			$('roomTitle').innerText = state.name;
+			$('roomTitle').textContent = t('room');
 			$('deleteBtn').style.display = (state.hostId === sessionId) ? '' : 'none';
 			const isHost = state.hostId === sessionId;
 			// Show/hide host controls wrapper
@@ -614,10 +742,10 @@
 					<div class="player-item" data-sid="${p.sessionId}">
 						<div class="player-name" style="${isHost ? 'cursor:pointer;' : ''}">${p.name}</div>
 						<div class="player-badges">
-							${p.isHost ? '<span class="badge">Host</span>' : ''}
-							${p.isReferee ? '<span class="badge">Referee</span>' : ''}
-							${!p.connected ? '<span class="badge offline">Offline</span>' : ''}
-							${canSet ? '<button class="set-ref-btn">Set</button>' : ''}
+							${p.isHost ? `<span class="badge">${t('host')}</span>` : ''}
+							${p.isReferee ? `<span class="badge">${t('referee')}</span>` : ''}
+							${!p.connected ? `<span class="badge offline">${t('offline')}</span>` : ''}
+							${canSet ? `<button class="set-ref-btn">${t('set')}</button>` : ''}
 						</div>
 					</div>
 				`;
@@ -645,6 +773,8 @@
 			$('mafiaMinus').disabled = !isHost;
 			$('mafiaPlus').disabled = !isHost;
 			// Host-only start/reset
+			$('startBtn').textContent = t('start_game');
+			$('resetBtn').textContent = t('reset');
 			$('startBtn').disabled = !isHost;
 			$('resetBtn').disabled = !isHost;
 		}
@@ -684,7 +814,7 @@
 
 		$('createRoomBtn').onclick = () => {
 			const name = currentName();
-			const roomName = $('roomName').value.trim() || 'Room';
+			const roomName = $('roomName').value.trim() || t('app_title');
 			socket.emit('createRoom', { sessionId, name, roomName });
 		};
 
@@ -793,6 +923,8 @@
 
 		// Name overlay logic
 		const savedName = localStorage.getItem('playerName');
+		if (!localStorage.getItem('lang')) setLang('ar');
+		applyLanguage();
 		if (savedName) {
 			$('nameOverlay').classList.remove('active');
 		} else {
@@ -800,7 +932,7 @@
 		}
 		$('continueBtn').onclick = () => {
 			const name = $('nameInput').value.trim();
-			if (!name) { alert('Please enter your name'); return; }
+			if (!name) { alert(t('ph_your_name')); return; }
 			localStorage.setItem('playerName', name);
 			$('nameOverlay').classList.remove('active');
 		};
@@ -809,6 +941,7 @@
 		// Settings modal logic
 		$('settingsBtn').onclick = () => {
 			$('settingsNameInput').value = localStorage.getItem('playerName') || '';
+			$('langSelect').value = getLang();
 			$('settingsOverlay').classList.add('active');
 		};
 		$('cancelSettingsBtn').onclick = () => {
@@ -816,8 +949,10 @@
 		};
 		$('saveSettingsBtn').onclick = () => {
 			const newName = $('settingsNameInput').value.trim();
-			if (!newName) { alert('Please enter a name'); return; }
+			if (!newName) { alert(t('ph_your_name')); return; }
 			localStorage.setItem('playerName', newName);
+			setLang($('langSelect').value);
+			applyLanguage();
 			$('settingsOverlay').classList.remove('active');
 			if (currentRoom) {
 				socket.emit('changeName', { sessionId, newName, roomId: currentRoom });
