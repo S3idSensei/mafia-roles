@@ -10,7 +10,8 @@
   "dependencies": {
     "express": "^4.19.2",
     "socket.io": "^4.7.5",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "@upstash/redis": "^1.31.6"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

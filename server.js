@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const { Redis } = require('@upstash/redis');
 
 const app = express();
 const server = http.createServer(app);
@@ -14,6 +15,80 @@ const io = new Server(server, {
 const rooms = new Map(); // roomId -> { id, name, hostId, players: Map(sessionId -> player), refereeId|null, settings, started, rolesAssignedAt }
 const roomDeletionTimers = new Map(); // roomId -> timeoutId
 // player: { sessionId, name, socketId, roomId, isHost, isReferee, role|null, connected }
+
+// Optional persistence via Upstash Redis (free tier). Set envs to enable:
+// UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
+const redis = (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
+	? new Redis({ url: process.env.UPSTASH_REDIS_REST_URL, token: process.env.UPSTASH_REDIS_REST_TOKEN })
+	: null;
+
+async function persistRooms() {
+	if (!redis) return;
+	try {
+		const payload = Array.from(rooms.values()).map((room) => ({
+			id: room.id,
+			name: room.name,
+			hostId: room.hostId,
+			refereeId: room.refereeId || null,
+			settings: room.settings,
+			started: room.started,
+			rolesAssignedAt: room.rolesAssignedAt,
+			players: Array.from(room.players.values()).map((p) => ({
+				sessionId: p.sessionId,
+				name: p.name,
+				roomId: room.id,
+				isHost: p.isHost,
+				isReferee: p.isReferee,
+				role: p.role,
+				connected: false // reset on restore
+			}))
+		}));
+		await redis.set('mafia_rooms_v1', JSON.stringify(payload));
+	} catch (e) {
+		console.error('Persist rooms failed:', e.message);
+	}
+}
+
+async function restoreRooms() {
+	if (!redis) return;
+	try {
+		const data = await redis.get('mafia_rooms_v1');
+		if (!data) return;
+		const arr = typeof data === 'string' ? JSON.parse(data) : data;
+		rooms.clear();
+		for (const r of arr) {
+			const playersMap = new Map();
+			for (const p of r.players || []) {
+				playersMap.set(p.sessionId, {
+					sessionId: p.sessionId,
+					name: p.name,
+					socketId: null,
+					roomId: r.id,
+					isHost: !!p.isHost,
+					isReferee: !!p.isReferee,
+					role: p.role || null,
+					connected: false
+				});
+			}
+			rooms.set(r.id, {
+				id: r.id,
+				name: r.name,
+				hostId: r.hostId,
+				players: playersMap,
+				refereeId: r.refereeId || null,
+				settings: r.settings || { mafiaCount: 1 },
+				started: !!r.started,
+				rolesAssignedAt: r.rolesAssignedAt || null
+			});
+		}
+		console.log(`Restored ${rooms.size} rooms from Redis`);
+	} catch (e) {
+		console.error('Restore rooms failed:', e.message);
+	}
+}
+
+// Kick off restore (no await needed)
+restoreRooms();
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -43,6 +118,7 @@ function createRoom(name, hostPlayer) {
 		rolesAssignedAt: null
 	};
 	rooms.set(id, room);
+	persistRooms();
 	return room;
 }
 
@@ -56,6 +132,7 @@ function deleteRoomIfEmpty(roomId) {
 				rooms.delete(roomId);
 				roomDeletionTimers.delete(roomId);
 				io.emit('roomsUpdated');
+				persistRooms();
 			}, 7200000); // 2h grace period
 			roomDeletionTimers.set(roomId, timeoutId);
 		}
@@ -112,6 +189,7 @@ io.on('connection', (socket) => {
 		io.emit('roomsUpdated');
 		io.to(room.id).emit('roomState', serializeRoom(room));
 		socket.emit('joinedRoom', { roomId: room.id });
+		persistRooms();
 	});
 
 	socket.on('joinRoom', ({ sessionId, name, roomId }) => {
@@ -134,6 +212,7 @@ io.on('connection', (socket) => {
 		io.emit('roomsUpdated');
 		io.to(room.id).emit('roomState', serializeRoom(room));
 		socket.emit('joinedRoom', { roomId: room.id });
+		persistRooms();
 		// If game already started, restore view for returning player
 		if (room.started) {
 			if (player.isReferee) {
@@ -157,6 +236,7 @@ io.on('connection', (socket) => {
 		io.to(roomId).emit('roomState', serializeRoom(room));
 		deleteRoomIfEmpty(roomId);
 		io.emit('roomsUpdated');
+		persistRooms();
 	});
 
 	socket.on('deleteRoom', ({ sessionId, roomId }) => {
@@ -171,6 +251,7 @@ io.on('connection', (socket) => {
 		}
 		io.to(roomId).emit('roomDeleted');
 		io.emit('roomsUpdated');
+		persistRooms();
 	});
 
 	socket.on('setReferee', ({ sessionId, roomId, refereeId }) => {
@@ -187,6 +268,7 @@ io.on('connection', (socket) => {
 		}
 		room.refereeId = refereeId || null;
 		io.to(roomId).emit('roomState', serializeRoom(room));
+		persistRooms();
 	});
 
 	socket.on('setMafiaCount', ({ sessionId, roomId, mafiaCount }) => {
@@ -195,6 +277,7 @@ io.on('connection', (socket) => {
 		if (room.hostId !== sessionId) return;
 		room.settings.mafiaCount = Math.max(0, Math.min(10, Number(mafiaCount || 1)));
 		io.to(roomId).emit('roomState', serializeRoom(room));
+		persistRooms();
 	});
 
 	// Change display name
@@ -219,6 +302,7 @@ io.on('connection', (socket) => {
 				if (updateInRoom(room)) break;
 			}
 		}
+		persistRooms();
 	});
 
 	socket.on('startGame', ({ sessionId, roomId }) => {
@@ -240,6 +324,7 @@ io.on('connection', (socket) => {
 			}
 		}
 		io.to(roomId).emit('roomState', serializeRoom(room));
+		persistRooms();
 	});
 
 	socket.on('resetGame', ({ sessionId, roomId }) => {
@@ -252,6 +337,7 @@ io.on('connection', (socket) => {
 		room.started = false;
 		room.rolesAssignedAt = null;
 		io.to(roomId).emit('roomState', serializeRoom(room));
+		persistRooms();
 	});
 
 	socket.on('disconnect', () => {
@@ -266,6 +352,7 @@ io.on('connection', (socket) => {
 			deleteRoomIfEmpty(room.id);
 		}
 		io.emit('roomsUpdated');
+		persistRooms();
 	});
 });
 
