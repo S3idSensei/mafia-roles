@@ -133,7 +133,7 @@ function deleteRoomIfEmpty(roomId) {
 				roomDeletionTimers.delete(roomId);
 				io.emit('roomsUpdated');
 				persistRooms();
-			}, 7200000); // 2h grace period
+			}, 1800000); // 1h grace period
 			roomDeletionTimers.set(roomId, timeoutId);
 		}
 	} else {
